@@ -12,6 +12,45 @@ export interface FetchOptions {
 }
 
 /**
+ * Susun pesan error yang cukup untuk mendiagnosis penolakan dari upstream.
+ *
+ * Status saja tidak menjelaskan apa-apa saat sebuah sumber diblokir Cloudflare:
+ * 403 bisa berarti aturan firewall (error 1020), tantangan JavaScript ("Just a
+ * moment…"), Bot Fight Mode, atau memang penolakan dari origin-nya. Ketiganya
+ * butuh penanganan berbeda, dan yang membedakan hanya isi halamannya — jadi
+ * potongan teksnya ikut dibawa, bersama `cf-ray` supaya bisa dicocokkan dengan
+ * log Cloudflare.
+ */
+async function describeFailure(res: Response, url: string): Promise<string> {
+	let snippet = "";
+
+	try {
+		const body = await res.text();
+		snippet = body
+			.replace(/<script[\s\S]*?<\/script>/gi, " ")
+			.replace(/<style[\s\S]*?<\/style>/gi, " ")
+			.replace(/<[^>]+>/g, " ")
+			.replace(/\s+/g, " ")
+			.trim()
+			.slice(0, 200);
+	} catch {
+		/* isi respons tidak selalu bisa dibaca */
+	}
+
+	const ray = res.headers.get("cf-ray");
+	const server = res.headers.get("server");
+
+	return [
+		`Upstream returned ${res.status} for ${url}`,
+		server ? `server=${server}` : "",
+		ray ? `cf-ray=${ray}` : "",
+		snippet ? `body="${snippet}"` : "",
+	]
+		.filter(Boolean)
+		.join(" | ");
+}
+
+/**
  * Fetch URL, parse HTML, return DOM root.
  */
 export async function fetchDOM(
@@ -32,9 +71,7 @@ export async function fetchDOM(
 		const res = await fetch(url, { headers, signal: controller.signal });
 
 		if (!res.ok) {
-			throw new BadGatewayError(
-				`Upstream returned ${res.status} for ${url}`,
-			);
+			throw new BadGatewayError(await describeFailure(res, url));
 		}
 
 		let html = await res.text();
@@ -100,7 +137,7 @@ export async function postJSON<T>(
 		});
 
 		if (!res.ok) {
-			throw new BadGatewayError(`POST ${url} returned ${res.status}`);
+			throw new BadGatewayError(await describeFailure(res, url));
 		}
 
 		return (await res.json()) as T;
@@ -128,7 +165,7 @@ export async function fetchText(
 
 		const res = await fetch(url, { headers, signal: controller.signal });
 		if (!res.ok) {
-			throw new BadGatewayError(`Fetch ${url} returned ${res.status}`);
+			throw new BadGatewayError(await describeFailure(res, url));
 		}
 		return await res.text();
 	} finally {
