@@ -1,7 +1,7 @@
 import type { HTMLElement } from "node-html-parser";
 import { NotFoundError } from "../lib/errors.js";
 import { Text, Id, Src, Num, Attr, AnimeSrc } from "./utils.js";
-import type { Oploverz, Format, Quality, UrlLink, Synopsis, Pagination } from "../types/index.js";
+import type { Oploverz, Format, Quality, UrlLink, Synopsis, Pagination, Server } from "../types/index.js";
 import { sources } from "../config/index.js";
 
 const baseUrl = sources.oploverz.baseUrl;
@@ -180,6 +180,20 @@ export function parseEpisodeDetails(doc: HTMLElement): Oploverz.EpisodeDetails {
 		doc.querySelector('a[href*="/anime/"]');
 	const seriesUrl = AnimeSrc(seriesLink, baseUrl) || "";
 
+	// Tiap <option> pada <select class="mirror"> memuat HTML iframe ter-encode
+	// base64. Di-decode di sini supaya semua mirror bisa dipilih, bukan hanya
+	// iframe bawaan yang tampil pertama kali.
+	const serverList: Server[] = [];
+	for (const option of doc.querySelectorAll("select.mirror option")) {
+		const value = Attr(option, "value");
+		if (!value) continue;
+
+		const src = Buffer.from(value, "base64").toString("utf-8").match(/src="([^"]+)"/)?.[1];
+		if (!src) continue;
+
+		serverList.push({ title: Text(option) || "Server", serverId: src });
+	}
+
 	const epMatch = Text(titleEl).match(/episode\s*(\d+)/i);
 	const episode = epMatch ? parseInt(epMatch[1], 10) : 0;
 
@@ -194,6 +208,7 @@ export function parseEpisodeDetails(doc: HTMLElement): Oploverz.EpisodeDetails {
 		},
 		downloadLinks,
 		seriesUrl,
+		serverList,
 	};
 }
 

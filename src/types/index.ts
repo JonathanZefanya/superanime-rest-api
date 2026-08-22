@@ -141,7 +141,7 @@ export namespace Oploverz {
 	export interface EpisodeDetails {
 		title: string; episode: number; poster: string; iframe: string;
 		navigation: { prev: string | null; next: string | null };
-		downloadLinks: Format[]; seriesUrl: string;
+		downloadLinks: Format[]; seriesUrl: string; serverList: Server[];
 	}
 	export interface ScheduleCollection { day: string; animeList: UrlLink[]; }
 	/** Jadwal rilis dikelompokkan per hari, lengkap dengan poster tiap judul. */

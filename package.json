@@ -14,7 +14,7 @@
     "express": "5.1.0",
     "lru-cache": "^11.0.1",
     "node-html-parser": "^7.0.1",
-    "sanitize-html": "2.17.0",
+    "sanitize-html": "^2.17.7",
     "valibot": "^1.2.0"
   },
   "devDependencies": {
