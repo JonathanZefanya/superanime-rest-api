@@ -38,6 +38,11 @@ export const sources = {
 		// Doronime tidak punya pemutar sama sekali — tiap episode hanya berisi
 		// tautan unduhan per resolusi, jadi namanya diberi keterangan agar
 		// pengguna tidak mengira sumber ini bisa dipakai untuk menonton.
+		//
+		// Cloudflare-nya juga memasang Managed Challenge terhadap IP datacenter:
+		// dari Vercel selalu dibalas halaman "Just a moment…" (403), dari IP
+		// rumah tetap 200. Route-nya dibiarkan hidup untuk pengembangan, dan
+		// frontend yang menyembunyikan sumber ini di build produksi.
 		name: "Doronime (Download)",
 		enabled: true,
 		cacheTtl: 10,
