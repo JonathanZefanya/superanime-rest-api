@@ -181,3 +181,30 @@ export namespace Nimegami {
 	export interface AnimeCollection { initial: string; animeList: UrlLink[]; }
 	export interface ScheduleGroup { day: string; animeList: AnimeCard[]; }
 }
+
+/* ===== Doronime Types ===== */
+
+export namespace Doronime {
+	export interface AnimeCard {
+		title: string; slug: string; poster: string; status: string;
+		type: string; score: string; sourceUrl?: string;
+	}
+	export interface AnimeDetails {
+		title: string; poster: string; romaji: string; english: string;
+		alternativeTitle: string; status: string; duration: string;
+		genreList: UrlLink[]; season: string; producer: string; studio: string;
+		releaseDate: string; totalEpisode: string; score: string;
+		synopsis: string; episodeList: EpisodeItem[];
+	}
+	export interface EpisodeItem {
+		episode: number; title: string; date: string; url: string;
+	}
+	export interface EpisodeDetails {
+		title: string; episode: number; animeSlug: string; animeUrl: string;
+		navigation: { prev: string | null; next: string | null };
+		downloadLinks: Format[];
+	}
+	export interface ScheduleGroup { day: string; animeList: UrlLink[]; }
+	export interface AnimeCollection { initial: string; animeList: UrlLink[]; }
+	export interface GenreCard { title: string; genreId: string; sourceUrl?: string; }
+}

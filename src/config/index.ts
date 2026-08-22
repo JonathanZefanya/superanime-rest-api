@@ -33,6 +33,15 @@ export const sources = {
 		enabled: true,
 		cacheTtl: 10,
 	},
+	doronime: {
+		baseUrl: "https://doroni.me",
+		// Doronime tidak punya pemutar sama sekali — tiap episode hanya berisi
+		// tautan unduhan per resolusi, jadi namanya diberi keterangan agar
+		// pengguna tidak mengira sumber ini bisa dipakai untuk menonton.
+		name: "Doronime (Download)",
+		enabled: true,
+		cacheTtl: 10,
+	},
 	samehadaku: {
 		baseUrl: "https://v2.samehadaku.how",
 		name: "Samehadaku",
