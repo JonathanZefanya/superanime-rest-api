@@ -11,6 +11,7 @@ router.get("/", ctrl.getRoutes);
 router.get("/home", serverCache(10), ctrl.getHome);
 router.get("/schedule", serverCache(10), ctrl.getSchedule);
 router.get("/anime", serverCache(10), ctrl.getAnimeList);
+router.get("/anime-list", serverCache(10), ctrl.getAnimeCollections);
 router.get("/anime/:slug", serverCache(10), ctrl.getAnimeDetails);
 router.get("/episode/:slug", serverCache(10), ctrl.getEpisodeDetails);
 router.get("/genre", serverCache(10), ctrl.getGenreList);

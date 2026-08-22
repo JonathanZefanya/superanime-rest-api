@@ -478,6 +478,78 @@ export function parseScheduleOrOngoing(doc: HTMLElement): Nimegami.AnimeCard[] {
 	return result;
 }
 
+/**
+ * Halaman `/anime-terbaru-sub-indo/` mengelompokkan rilisan per hari lewat
+ * `div.wrapper-3` yang `id`-nya adalah nama hari (senin…minggu). Blok teratas
+ * memakai hari berjalan, jadi hari yang sama bisa muncul dua kali dan digabung.
+ */
+export function parseScheduleGroups(doc: HTMLElement): Nimegami.ScheduleGroup[] {
+	const groups = new Map<string, Nimegami.AnimeCard[]>();
+
+	for (const section of doc.querySelectorAll("div.wrapper-3")) {
+		const day = (Attr(section, "id") || "").toLowerCase();
+		if (!day) continue;
+
+		const animeList = groups.get(day) ?? [];
+		for (const article of section.querySelectorAll("article")) {
+			try {
+				animeList.push(parseTerbaruCard(article));
+			} catch {
+				/* kartu tanpa judul dilewati */
+			}
+		}
+
+		if (animeList.length) groups.set(day, animeList);
+	}
+
+	if (!groups.size) throw new NotFoundError("No schedule groups found");
+
+	// Blok teratas memakai hari berjalan, jadi urutan di halaman tidak dimulai
+	// dari Senin. Diurutkan ulang supaya jadwalnya terbaca normal.
+	const order = ["senin", "selasa", "rabu", "kamis", "jumat", "sabtu", "minggu"];
+
+	return [...groups]
+		.sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
+		.map(([day, animeList]) => ({
+			day: day.charAt(0).toUpperCase() + day.slice(1),
+			animeList,
+		}));
+}
+
+/**
+ * Daftar A-Z pada `/anime-list/`: tiap `div.lettergroup` berisi satu inisial
+ * (`.letter-cell a`) dan seluruh judul yang diawalinya.
+ */
+export function parseAnimeCollections(doc: HTMLElement): Nimegami.AnimeCollection[] {
+	const result: Nimegami.AnimeCollection[] = [];
+
+	for (const group of doc.querySelectorAll("div.lettergroup")) {
+		const initialEl = group.querySelector(".letter-cell a");
+		if (!initialEl) continue;
+
+		const animeList: UrlLink[] = [];
+		for (const link of group.querySelectorAll("ul li a")) {
+			// Teks tautan menempel status ("Judul (Complete)") pada sebuah <span>.
+			// Atribut `title` lebih bersih, tapi rusak untuk judul yang memuat
+			// tanda kutip — jadi status di ujung teks tetap dibuang manual.
+			const status = Text(link.querySelector("span"));
+			const raw = Attr(link, "title") || Text(link);
+			const title = status
+				? raw.replace(new RegExp(`\\s*\\(\\s*${status}\\s*\\)\\s*$`, "i"), "").trim()
+				: raw.trim();
+
+			const url = AnimeSrc(link, baseUrl) || "";
+			if (title && url) animeList.push({ title, url });
+		}
+
+		if (animeList.length) result.push({ initial: Text(initialEl), animeList });
+	}
+
+	if (!result.length) throw new NotFoundError("No anime list found");
+
+	return result;
+}
+
 export function parseGenreCategories(doc: HTMLElement): UrlLink[] {
 	const links = doc.querySelectorAll('a[href*="/category/"]');
 	const seen = new Set<string>();

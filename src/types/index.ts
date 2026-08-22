@@ -178,4 +178,6 @@ export namespace Nimegami {
 		streamSources: StreamSource[]; downloadLinks: Format[];
 		navigation: { prev: number | null; next: number | null };
 	}
+	export interface AnimeCollection { initial: string; animeList: UrlLink[]; }
+	export interface ScheduleGroup { day: string; animeList: AnimeCard[]; }
 }

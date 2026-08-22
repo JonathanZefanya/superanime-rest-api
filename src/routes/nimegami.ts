@@ -10,6 +10,7 @@ router.use(autoSync("nimegami"));
 router.get("/", ctrl.getRoutes);
 router.get("/home", serverCache(10), ctrl.getHome);
 router.get("/anime", serverCache(10), ctrl.getAnimeList);
+router.get("/anime-list", serverCache(10), ctrl.getAnimeCollections);
 router.get("/anime/:slug", serverCache(10), ctrl.getAnimeDetails);
 router.get("/episode/:slug/:episode", serverCache(10), ctrl.getEpisodeDetails);
 router.get("/search", serverCache(10), ctrl.searchAnimes);

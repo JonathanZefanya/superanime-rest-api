@@ -265,12 +265,14 @@ export function parsePagination(doc: HTMLElement): Pagination | null {
 }
 
 export function parseAnimeList(doc: HTMLElement): Oploverz.AnimeCollection[] {
-	const letterContainers = doc.querySelectorAll(".taxindex, .sorter, .bariskelom");
+	// `/anime/list-mode/` menaruh tiap inisial pada `.soralist .blix`, dengan
+	// hurufnya di `span > a[name]` dan judulnya di `ul li a.series`.
+	const letterContainers = doc.querySelectorAll(".soralist .blix");
 	if (!letterContainers.length) throw new NotFoundError("No anime list found");
 
 	const result: Oploverz.AnimeCollection[] = [];
 	for (const container of letterContainers) {
-		const initialEl = container.querySelector(".barispenz a, b");
+		const initialEl = container.querySelector("span a, b");
 		if (!initialEl) continue;
 
 		const animeList: UrlLink[] = [];

@@ -5,6 +5,10 @@ import * as scraper from "../scrapers/nimegami.js";
 import * as parser from "../parsers/nimegami.js";
 import { setPayload } from "../lib/response.js";
 import { BadRequestError } from "../lib/errors.js";
+import type { Nimegami, UrlLink } from "../types/index.js";
+
+/** Pagar pengaman kalau markup paginasi Nimegami berubah. */
+const MAX_LIST_PAGES = 20;
 
 function getPageFromQuery(query: Record<string, unknown>): string {
 	try {
@@ -33,7 +37,8 @@ export async function getRoutes(
 			{ path: "/anime", description: "Anime list (query: page)" },
 			{ path: "/anime/:slug", description: "Anime details" },
 			{ path: "/search", description: "Search anime (query: q)" },
-			{ path: "/schedule", description: "Schedule - latest anime releases" },
+			{ path: "/anime-list", description: "All anime grouped A-Z" },
+			{ path: "/schedule", description: "Release schedule grouped by day" },
 			{ path: "/genre", description: "Genre category list" },
 			{ path: "/ongoing", description: "Ongoing anime list (query: page)" },
 			{ path: "/genre/:genreId", description: "Anime filtered by genre (query: page)" },
@@ -137,12 +142,44 @@ export async function getSchedule(
 	next: NextFunction,
 ) {
 	try {
-		const page = getPageFromQuery(req.query);
-		const path = page !== "1" ? `/anime-terbaru-sub-indo/page/${page}/` : "/anime-terbaru-sub-indo/";
-		const doc = await scraper.scrapeDOM(path);
-		const data = parser.parseScheduleOrOngoing(doc);
-		const pagination = parser.parsePagination(doc);
-		res.json(setPayload(res, { data, pagination }));
+		const doc = await scraper.scrapeDOM("/anime-terbaru-sub-indo/");
+		const data = parser.parseScheduleGroups(doc);
+		res.json(setPayload(res, { data }));
+	} catch (err) {
+		next(err);
+	}
+}
+
+export async function getAnimeCollections(
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) {
+	try {
+		// `/anime-list/` dipecah jadi beberapa halaman (±500 judul per halaman)
+		// dan satu inisial bisa terpotong antar halaman, jadi semuanya diambil
+		// lalu digabung per inisial.
+		const first = await scraper.scrapeDOM("/anime-list/");
+		const merged = new Map<string, UrlLink[]>();
+
+		const collect = (groups: Nimegami.AnimeCollection[]) => {
+			for (const group of groups) {
+				const list = merged.get(group.initial) ?? [];
+				list.push(...group.animeList);
+				merged.set(group.initial, list);
+			}
+		};
+
+		collect(parser.parseAnimeCollections(first));
+
+		const totalPages = Math.min(parser.parsePagination(first)?.totalPages ?? 1, MAX_LIST_PAGES);
+		for (let page = 2; page <= totalPages; page++) {
+			const doc = await scraper.scrapeDOM(`/anime-list/page/${page}/`);
+			collect(parser.parseAnimeCollections(doc));
+		}
+
+		const data = [...merged].map(([initial, animeList]) => ({ initial, animeList }));
+		res.json(setPayload(res, { data }));
 	} catch (err) {
 		next(err);
 	}

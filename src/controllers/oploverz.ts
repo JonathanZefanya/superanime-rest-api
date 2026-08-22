@@ -31,7 +31,8 @@ export async function getRoutes(
 		const routes = [
 			{ path: "/", description: "Home - popular & latest anime" },
 			{ path: "/schedule", description: "Release schedule" },
-			{ path: "/anime", description: "All anime list (A-Z)" },
+			{ path: "/anime", description: "All anime (query: page)" },
+			{ path: "/anime-list", description: "All anime grouped A-Z" },
 			{ path: "/anime/:slug", description: "Anime details" },
 			{ path: "/episode/:slug", description: "Episode details" },
 			{ path: "/genre", description: "All genres" },
@@ -86,6 +87,20 @@ export async function getAnimeList(
 		const data = parser.parseAnimeByStatus(doc);
 		const pagination = parser.parsePagination(doc);
 		res.json(setPayload(res, { data, pagination }));
+	} catch (err) {
+		next(err);
+	}
+}
+
+export async function getAnimeCollections(
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) {
+	try {
+		const doc = await scraper.scrapeDOM("/anime/list-mode/");
+		const data = parser.parseAnimeList(doc);
+		res.json(setPayload(res, { data }));
 	} catch (err) {
 		next(err);
 	}
