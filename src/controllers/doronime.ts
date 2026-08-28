@@ -5,6 +5,7 @@ import * as scraper from "../scrapers/doronime.js";
 import * as parser from "../parsers/doronime.js";
 import { setPayload } from "../lib/response.js";
 import { BadRequestError } from "../lib/errors.js";
+import { paginateAnimeList } from "../lib/anime-list.js";
 
 function getPageFromQuery(query: Record<string, unknown>): string {
 	try {
@@ -169,7 +170,8 @@ export async function getAnimeCollections(
 		// `?view=list` mengabaikan paginasi dan mengirim seluruh katalog A-Z
 		// sekaligus, jadi cukup satu permintaan.
 		const doc = await scraper.scrapeDOM("/anime?view=list");
-		res.json(setPayload(res, { data: parser.parseAnimeCollections(doc) }));
+		const data = paginateAnimeList(parser.parseAnimeCollections(doc), req.query.initial, req.query.page);
+		res.json(setPayload(res, data));
 	} catch (err) {
 		next(err);
 	}

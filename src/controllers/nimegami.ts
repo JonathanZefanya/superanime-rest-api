@@ -6,6 +6,7 @@ import * as parser from "../parsers/nimegami.js";
 import { setPayload } from "../lib/response.js";
 import { BadRequestError } from "../lib/errors.js";
 import type { Nimegami, UrlLink } from "../types/index.js";
+import { paginateAnimeList } from "../lib/anime-list.js";
 
 /** Pagar pengaman kalau markup paginasi Nimegami berubah. */
 const MAX_LIST_PAGES = 20;
@@ -179,7 +180,7 @@ export async function getAnimeCollections(
 		}
 
 		const data = [...merged].map(([initial, animeList]) => ({ initial, animeList }));
-		res.json(setPayload(res, { data }));
+		res.json(setPayload(res, paginateAnimeList(data, req.query.initial, req.query.page)));
 	} catch (err) {
 		next(err);
 	}
