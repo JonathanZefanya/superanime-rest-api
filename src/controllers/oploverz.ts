@@ -6,6 +6,7 @@ import * as parser from "../parsers/oploverz.js";
 import { setPayload } from "../lib/response.js";
 import { AppError, BadRequestError } from "../lib/errors.js";
 import { paginateAnimeList } from "../lib/anime-list.js";
+import { cachedAsync } from "../lib/async-cache.js";
 
 function getPageFromQuery(query: Record<string, unknown>): string {
 	try {
@@ -99,9 +100,11 @@ export async function getAnimeCollections(
 	next: NextFunction,
 ) {
 	try {
-		const doc = await scraper.scrapeDOM("/anime/list-mode/");
-		const data = parser.parseAnimeList(doc);
-			res.json(setPayload(res, paginateAnimeList(data, req.query.initial, req.query.page)));
+		const data = await cachedAsync("anime-list:oploverz", async () => {
+			const doc = await scraper.scrapeDOM("/anime/list-mode/");
+			return parser.parseAnimeList(doc);
+		});
+		res.json(setPayload(res, paginateAnimeList(data, req.query.initial, req.query.page)));
 	} catch (err) {
 		next(err);
 	}

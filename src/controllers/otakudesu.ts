@@ -6,6 +6,7 @@ import * as parser from "../parsers/otakudesu.js";
 import { setPayload } from "../lib/response.js";
 import { AppError, BadGatewayError, BadRequestError } from "../lib/errors.js";
 import { paginateAnimeList } from "../lib/anime-list.js";
+import { cachedAsync } from "../lib/async-cache.js";
 
 function getPageFromQuery(query: Record<string, unknown>): string {
 	try {
@@ -83,19 +84,16 @@ export async function getAnimes(
 	next: NextFunction,
 ) {
 	try {
-		let doc;
-		try {
-			doc = await scraper.scrapeDOM("/anime?view=list", undefined, true);
-		} catch (error) {
-			// Mode katalog kadang diblokir Cloudflare; halaman legacy tetap bisa
-			// mengembalikan data sehingga daftar tidak gagal total.
-			if (!(error instanceof Error) || !error.message.includes("403")) {
-				throw error;
+		const data = await cachedAsync("anime-list:otakudesu", async () => {
+			let doc;
+			try {
+				doc = await scraper.scrapeDOM("/anime?view=list", undefined, true);
+			} catch (error) {
+				if (!(error instanceof Error) || !error.message.includes("403")) throw error;
+				doc = await scraper.scrapeDOM("/anime-list/", undefined, true);
 			}
-
-			doc = await scraper.scrapeDOM("/anime-list/", undefined, true);
-		}
-		const data = parser.parseAllAnimes(doc);
+			return parser.parseAllAnimes(doc);
+		});
 		res.json(setPayload(res, paginateAnimeList(data, req.query.initial, req.query.page)));
 	} catch (err) {
 		next(err);

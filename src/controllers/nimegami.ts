@@ -7,6 +7,7 @@ import { setPayload } from "../lib/response.js";
 import { BadRequestError } from "../lib/errors.js";
 import type { Nimegami, UrlLink } from "../types/index.js";
 import { paginateAnimeList } from "../lib/anime-list.js";
+import { cachedAsync } from "../lib/async-cache.js";
 
 /** Pagar pengaman kalau markup paginasi Nimegami berubah. */
 const MAX_LIST_PAGES = 20;
@@ -160,26 +161,24 @@ export async function getAnimeCollections(
 		// `/anime-list/` dipecah jadi beberapa halaman (±500 judul per halaman)
 		// dan satu inisial bisa terpotong antar halaman, jadi semuanya diambil
 		// lalu digabung per inisial.
-		const first = await scraper.scrapeDOM("/anime-list/");
-		const merged = new Map<string, UrlLink[]>();
-
-		const collect = (groups: Nimegami.AnimeCollection[]) => {
-			for (const group of groups) {
-				const list = merged.get(group.initial) ?? [];
-				list.push(...group.animeList);
-				merged.set(group.initial, list);
+		const data = await cachedAsync("anime-list:nimegami", async () => {
+			const first = await scraper.scrapeDOM("/anime-list/");
+			const merged = new Map<string, UrlLink[]>();
+			const collect = (groups: Nimegami.AnimeCollection[]) => {
+				for (const group of groups) {
+					const list = merged.get(group.initial) ?? [];
+					list.push(...group.animeList);
+					merged.set(group.initial, list);
+				}
+			};
+			collect(parser.parseAnimeCollections(first));
+			const totalPages = Math.min(parser.parsePagination(first)?.totalPages ?? 1, MAX_LIST_PAGES);
+			for (let page = 2; page <= totalPages; page++) {
+				const doc = await scraper.scrapeDOM(`/anime-list/page/${page}/`);
+				collect(parser.parseAnimeCollections(doc));
 			}
-		};
-
-		collect(parser.parseAnimeCollections(first));
-
-		const totalPages = Math.min(parser.parsePagination(first)?.totalPages ?? 1, MAX_LIST_PAGES);
-		for (let page = 2; page <= totalPages; page++) {
-			const doc = await scraper.scrapeDOM(`/anime-list/page/${page}/`);
-			collect(parser.parseAnimeCollections(doc));
-		}
-
-		const data = [...merged].map(([initial, animeList]) => ({ initial, animeList }));
+			return [...merged].map(([initial, animeList]) => ({ initial, animeList }));
+		});
 		res.json(setPayload(res, paginateAnimeList(data, req.query.initial, req.query.page)));
 	} catch (err) {
 		next(err);
