@@ -148,6 +148,9 @@ export async function getCompletedAnimes(
 	}
 }
 
+const SEARCH_PAGE_SIZE = 15;
+const SEARCH_MAX_PAGES = 5;
+
 export async function searchAnimes(
 	req: Request,
 	res: Response,
@@ -155,8 +158,26 @@ export async function searchAnimes(
 ) {
 	try {
 		const q = getSearchQuery(req.query);
-		const doc = await scraper.scrapeDOM(`?s=${encodeURIComponent(q)}&post_type=anime`);
-		const data = parser.parseSearchedAnimes(doc);
+		const search = `?s=${encodeURIComponent(q)}&post_type=anime`;
+		const data = parser.parseSearchedAnimes(await scraper.scrapeDOM(search));
+		const seen = new Set(data.map((a) => a.animeId));
+
+		// Otakudesu membatasi 15 hasil per halaman; halaman berikutnya ada di /page/N/.
+		for (let page = 2; page <= SEARCH_MAX_PAGES && data.length >= (page - 1) * SEARCH_PAGE_SIZE; page++) {
+			let items: typeof data;
+			try {
+				items = parser.parseSearchedAnimes(await scraper.scrapeDOM(`/page/${page}/${search}`));
+			} catch {
+				break;
+			}
+			for (const item of items) {
+				if (seen.has(item.animeId)) continue;
+				seen.add(item.animeId);
+				data.push(item);
+			}
+			if (items.length < SEARCH_PAGE_SIZE) break;
+		}
+
 		res.json(setPayload(res, { data }));
 	} catch (err) {
 		next(err);
