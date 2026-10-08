@@ -4,6 +4,7 @@ import kuramanimeRouter from "./kuramanime.js";
 import oploverzRouter from "./oploverz.js";
 import nimegamiRouter from "./nimegami.js";
 import doronimeRouter from "./doronime.js";
+import ylnimeRouter from "./ylnime.js";
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use("/kuramanime", kuramanimeRouter);
 router.use("/oploverz", oploverzRouter);
 router.use("/nimegami", nimegamiRouter);
 router.use("/doronime", doronimeRouter);
+router.use("/ylnime", ylnimeRouter);
 
 export default router;

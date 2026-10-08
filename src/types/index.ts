@@ -208,3 +208,30 @@ export namespace Doronime {
 	export interface AnimeCollection { initial: string; animeList: UrlLink[]; }
 	export interface GenreCard { title: string; genreId: string; sourceUrl?: string; }
 }
+
+/* ===== YLnime Types ===== */
+
+export namespace YLnime {
+	export interface AnimeCard {
+		title: string; slug: string; poster: string; label: string;
+		score: string; status: string; sourceUrl: string;
+	}
+	export interface EpisodeItem { title: string; slug: string; date: string; }
+	export interface AnimeDetails {
+		title: string; poster: string; status: string; type: string; year: string;
+		score: string; synopsis: string; genreList: GenreCard[]; episodeList: EpisodeItem[];
+		sourceUrl: string;
+	}
+	export interface Stream { reso: string; link: string; }
+	export interface EpisodeJson {
+		ok: boolean; reso_dipakai?: string; reso_ada?: string[]; streams?: Stream[];
+		next_ep?: string | null; prev_ep?: string | null;
+	}
+	export interface EpisodeDetails {
+		title: string; animeSlug: string; animeTitle: string;
+		navigation: { prev: string | null; next: string | null };
+		serverList: Server[]; defaultStreaming: string; sourceUrl: string;
+	}
+	export interface ScheduleGroup { day: string; animeList: AnimeCard[]; }
+	export interface GenreCard { title: string; genreId: string; }
+}

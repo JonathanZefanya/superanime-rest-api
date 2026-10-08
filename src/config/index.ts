@@ -47,6 +47,12 @@ export const sources = {
 		enabled: true,
 		cacheTtl: 10,
 	},
+	ylnime: {
+		baseUrl: "https://ylnime.com",
+		name: "YLnime",
+		enabled: true,
+		cacheTtl: 10,
+	},
 	samehadaku: {
 		baseUrl: "https://v2.samehadaku.how",
 		name: "Samehadaku",
