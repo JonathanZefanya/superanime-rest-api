@@ -151,6 +151,47 @@ export async function postJSON<T>(
 }
 
 /**
+ * POST form-urlencoded dan kembalikan teks mentah. Dipakai untuk endpoint
+ * `admin-ajax.php` yang membalas potongan HTML, bukan JSON.
+ */
+export async function postText(
+	url: string,
+	body: Record<string, string>,
+	ref?: string,
+	timeout = 15_000,
+): Promise<string> {
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), timeout);
+
+	try {
+		const headers: Record<string, string> = {
+			"User-Agent": DEFAULT_USER_AGENT,
+			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+			"X-Requested-With": "XMLHttpRequest",
+		};
+		if (ref) {
+			headers.Referer = ref;
+			headers.Origin = new URL(ref).origin;
+		}
+
+		const res = await fetch(url, {
+			method: "POST",
+			headers,
+			body: new URLSearchParams(body).toString(),
+			signal: controller.signal,
+		});
+
+		if (!res.ok) {
+			throw new BadGatewayError(await describeFailure(res, url));
+		}
+
+		return await res.text();
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/**
  * Fetch raw text dari URL.
  */
 export async function fetchText(

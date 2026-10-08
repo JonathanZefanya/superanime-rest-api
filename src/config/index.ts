@@ -30,7 +30,7 @@ export const sources = {
 	nimegami: {
 		baseUrl: "https://nimegami.id",
 		name: "Nimegami",
-		enabled: true,
+		enabled: false,
 		cacheTtl: 10,
 	},
 	doronime: {
@@ -50,6 +50,12 @@ export const sources = {
 	ylnime: {
 		baseUrl: "https://ylnime.com",
 		name: "YLnime",
+		enabled: true,
+		cacheTtl: 10,
+	},
+	nontonanimeid: {
+		baseUrl: "https://s13.nontonanimeid.boats",
+		name: "NontonAnimeID",
 		enabled: true,
 		cacheTtl: 10,
 	},

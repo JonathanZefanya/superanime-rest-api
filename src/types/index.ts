@@ -235,3 +235,28 @@ export namespace YLnime {
 	export interface ScheduleGroup { day: string; animeList: AnimeCard[]; }
 	export interface GenreCard { title: string; genreId: string; }
 }
+
+/* ===== NontonAnimeID Types ===== */
+
+export namespace NontonAnimeID {
+	export interface AnimeCard {
+		title: string; slug: string; poster: string; episode: string;
+		score: string; type: string; sourceUrl: string;
+	}
+	export interface EpisodeItem { title: string; slug: string; date: string; }
+	export interface AnimeDetails {
+		title: string; alternativeTitle: string; poster: string; score: string; type: string;
+		status: string; studio: string; aired: string; season: string; duration: string;
+		synopsis: string; genreList: GenreCard[]; episodeList: EpisodeItem[]; sourceUrl: string;
+	}
+	export interface EpisodeDetails {
+		title: string; animeSlug: string;
+		navigation: { prev: string | null; next: string | null };
+		serverList: Server[]; defaultStreaming: string; sourceUrl: string;
+	}
+	/** Payload yang di-encode base64 sebagai `serverId`. */
+	export interface ServerPayload { post: string; nume: string; type: string; episode: string; }
+	export interface ScheduleGroup { day: string; animeList: AnimeCard[]; }
+	export interface AnimeCollection { initial: string; animeList: { title: string; slug: string; url: string }[]; }
+	export interface GenreCard { title: string; genreId: string; }
+}
