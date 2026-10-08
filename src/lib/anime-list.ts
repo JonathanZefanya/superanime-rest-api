@@ -19,7 +19,7 @@ export function paginateAnimeList<T>(
 	groups: AnimeListGroup<T>[],
 	initialQuery: unknown,
 	pageQuery: unknown,
-	size = 18,
+	size = 50,
 ): AnimeListPage<T> {
 	const initial = typeof initialQuery === "string" ? initialQuery.trim().toUpperCase() : "";
 	const requestedPage = Math.max(1, Number.parseInt(String(pageQuery ?? "1"), 10) || 1);
