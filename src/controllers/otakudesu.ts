@@ -85,14 +85,11 @@ export async function getAnimes(
 ) {
 	try {
 		const data = await cachedAsync("anime-list:otakudesu", async () => {
-			let doc;
 			try {
-				doc = await scraper.scrapeDOM("/anime?view=list", undefined, true);
-			} catch (error) {
-				if (!(error instanceof Error) || !error.message.includes("403")) throw error;
-				doc = await scraper.scrapeDOM("/anime-list/", undefined, true);
+				return parser.parseAllAnimes(await scraper.scrapeDOM("/anime-list/", undefined, true));
+			} catch {
+				return parser.parseAllAnimes(await scraper.scrapeDOM("/anime?view=list", undefined, true));
 			}
-			return parser.parseAllAnimes(doc);
 		});
 		res.json(setPayload(res, paginateAnimeList(data, req.query.initial, req.query.page)));
 	} catch (err) {
@@ -149,7 +146,7 @@ export async function getCompletedAnimes(
 }
 
 const SEARCH_PAGE_SIZE = 15;
-const SEARCH_MAX_PAGES = 5;
+const SEARCH_MAX_PAGES = 10;
 
 export async function searchAnimes(
 	req: Request,
