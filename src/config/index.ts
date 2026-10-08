@@ -55,6 +55,9 @@ export const sources = {
 	},
 	nontonanimeid: {
 		baseUrl: "https://s13.nontonanimeid.boats",
+		// Cloudflare Managed Challenge menolak IP datacenter (Vercel), sama
+		// seperti Doronime. Route dibiarkan hidup untuk pengembangan; frontend
+		// menyembunyikan sumber ini di build produksi.
 		name: "NontonAnimeID",
 		enabled: true,
 		cacheTtl: 10,
