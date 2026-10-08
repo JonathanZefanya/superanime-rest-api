@@ -15,7 +15,8 @@ function pageSuffix(page: number): string {
 	return page > 1 ? `&page=${page}` : "";
 }
 
-const RESOLUTIONS = ["1080p", "720p", "480p", "360p"];
+const ONGOING_PAGE_SIZE = 18;
+const RESOLUTIONS =["1080p", "720p", "480p", "360p"];
 const resoValue = (reso: string): number => Number.parseInt(reso, 10) || 0;
 
 export async function getRoutes(req: Request, res: Response, next: NextFunction) {
@@ -39,8 +40,25 @@ export async function getRoutes(req: Request, res: Response, next: NextFunction)
 
 export async function getOngoing(req: Request, res: Response, next: NextFunction) {
 	try {
-		const doc = await scraper.scrapeDOM("ongoing.php");
-		res.json(setPayload(res, { data: parser.parseCards(doc), pagination: parser.parsePagination(doc, 1) }));
+		// YLnime menampilkan semua judul ongoing di satu halaman; dipecah di sini.
+		const cards = parser.parseCards(await scraper.scrapeDOM("ongoing.php"));
+		const totalPages = Math.max(1, Math.ceil(cards.length / ONGOING_PAGE_SIZE));
+		const page = Math.min(getPage(req.query), totalPages);
+		const start = (page - 1) * ONGOING_PAGE_SIZE;
+
+		res.json(
+			setPayload(res, {
+				data: cards.slice(start, start + ONGOING_PAGE_SIZE),
+				pagination: {
+					currentPage: page,
+					prevPage: page > 1 ? page - 1 : null,
+					nextPage: page < totalPages ? page + 1 : null,
+					totalPages,
+					hasPrevPage: page > 1,
+					hasNextPage: page < totalPages,
+				},
+			}),
+		);
 	} catch (err) {
 		next(err);
 	}
