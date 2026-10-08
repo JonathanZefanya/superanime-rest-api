@@ -225,6 +225,9 @@ export async function getEpisodeDetails(
 		const { episodeId } = req.params;
 		const doc = await scraper.scrapeEpisodeDOM(String(episodeId));
 		const data = parser.parseEpisodeDetails(doc);
+		if (data.defaultStreaming) {
+			data.defaultStreaming = await scraper.resolvePlayerUrl(data.defaultStreaming);
+		}
 		res.json(setPayload(res, { data }));
 	} catch (err) {
 		next(err);
@@ -278,10 +281,15 @@ export async function getServerDetails(
 		const content = await scraper.scrapeServer({ ...body, nonce });
 
 		const match = content.match(/src=["']([^"']+)["']/i);
-		const url = match ? match[1] : "";
+		const embedUrl = match ? match[1] : "";
 
-		if (!url) {
+		if (!embedUrl) {
 			throw new BadGatewayError("Server stream URL not found");
+		}
+
+		const url = await scraper.resolvePlayerUrl(embedUrl);
+		if (scraper.isUnembeddable(url)) {
+			throw new BadGatewayError("Server ini tidak bisa diputar di luar Otakudesu. Pilih server lain.");
 		}
 
 		const data = { title: `Server ${body.q || decoded.id}`, url };

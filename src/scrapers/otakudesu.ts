@@ -74,6 +74,34 @@ export async function scrapeServer(
 	return Buffer.from(data.data, "base64").toString("utf-8");
 }
 
+/**
+ * Player desustream memasang CSP `frame-ancestors` yang hanya mengizinkan
+ * domain Otakudesu, jadi tidak bisa di-embed. Isinya cuma pembungkus `<video>`
+ * untuk file mp4 yang bebas diputar dari mana saja, jadi URL file itu yang
+ * dikembalikan. Kalau gagal diekstrak, URL asli dipakai apa adanya.
+ */
+export function isUnembeddable(url: string): boolean {
+	try {
+		return /(^|\.)desustream\.[a-z]+$/i.test(new URL(url).hostname);
+	} catch {
+		return false;
+	}
+}
+
+export async function resolvePlayerUrl(url: string): Promise<string> {
+	if (!isUnembeddable(url)) return url;
+
+	try {
+		const html = await fetchText(url, `${BASE}/`, 8_000);
+		const match =
+			html.match(/videoURL\s*=\s*["']([^"']+)["']/) ??
+			html.match(/["'](https?:\/\/[^"']+\.(?:mp4|webm)(?:\?[^"']*)?)["']/i);
+		return match?.[1] ?? url;
+	} catch {
+		return url;
+	}
+}
+
 /** Fetch teks dari path (digunakan untuk secret/utility) */
 export async function scrapeText(pathname: string): Promise<string> {
 	return fetchText(`${BASE}${pathname}`);
