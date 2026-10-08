@@ -9,6 +9,8 @@ export interface FetchOptions {
 	ref?: string;
 	sanitize?: boolean;
 	timeout?: number;
+	/** Perbaiki HTML mentah sebelum di-parse, untuk markup upstream yang rusak. */
+	transform?: (html: string) => string;
 }
 
 /**
@@ -57,7 +59,7 @@ export async function fetchDOM(
 	url: string,
 	options: FetchOptions = {},
 ): Promise<HTMLElement> {
-	const { ref, sanitize = false, timeout = 15_000 } = options;
+	const { ref, sanitize = false, timeout = 15_000, transform } = options;
 
 	const controller = new AbortController();
 	const timer = setTimeout(() => controller.abort(), timeout);
@@ -78,6 +80,8 @@ export async function fetchDOM(
 		if (!html || html.length < 50) {
 			throw new BadGatewayError("Empty or too short response from upstream");
 		}
+
+		if (transform) html = transform(html);
 
 		if (sanitize) {
 			html = sanitizeHtml(html, {

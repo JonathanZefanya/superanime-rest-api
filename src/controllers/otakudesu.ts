@@ -223,7 +223,7 @@ export async function getEpisodeDetails(
 ) {
 	try {
 		const { episodeId } = req.params;
-		const doc = await scraper.scrapeDOM(`/episode/${episodeId}`);
+		const doc = await scraper.scrapeEpisodeDOM(String(episodeId));
 		const data = parser.parseEpisodeDetails(doc);
 		res.json(setPayload(res, { data }));
 	} catch (err) {

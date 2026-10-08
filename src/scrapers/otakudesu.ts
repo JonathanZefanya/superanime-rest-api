@@ -14,6 +14,20 @@ export async function scrapeDOM(
 	return fetchDOM(`${BASE}${pathname}`, { ref, sanitize });
 }
 
+/**
+ * Grup mirror terakhir (biasanya 720p) di halaman episode tidak ditutup
+ * `</ul>`-nya, sehingga parser membuang `ul` beserta label kualitasnya.
+ */
+const closeMirrorGroups = (html: string): string =>
+	html.replace(
+		/(<ul class="m\d+p"[^>]*>)([\s\S]*?)(<\/ul>|<\/div>)/g,
+		(match, open, body, close) => (close === "</ul>" ? match : `${open}${body}</ul>${close}`),
+	);
+
+export async function scrapeEpisodeDOM(episodeId: string): Promise<HTMLElement> {
+	return fetchDOM(`${BASE}/episode/${episodeId}`, { transform: closeMirrorGroups });
+}
+
 const AJAX_ENDPOINT = `${BASE}/wp-admin/admin-ajax.php`;
 
 /**
