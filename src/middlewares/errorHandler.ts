@@ -12,6 +12,9 @@ export function errorHandler(
 	res: Response,
 	_next: NextFunction,
 ): void {
+	// clientCache sudah memasang max-age sebelum handler jalan; error jangan ikut di-cache browser.
+	res.set("Cache-Control", "no-store");
+
 	// ValiError -> 400
 	if (err instanceof ValiError) {
 		const message = err.issues?.[0]?.message || "Validation failed";
