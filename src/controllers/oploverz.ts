@@ -131,7 +131,7 @@ export async function getOngoing(
 ) {
 	try {
 		const page = getPageFromQuery(req.query);
-		const qs = `?status=Ongoing${page && page !== "1" ? `&page=${page}` : ""}`;
+		const qs = `?status=Ongoing&order=update${page && page !== "1" ? `&page=${page}` : ""}`;
 		const doc = await scraper.scrapeDOM(`/anime/${qs}`);
 		const data = parser.parseAnimeByStatus(doc);
 		const pagination = parser.parsePagination(doc);
@@ -148,7 +148,7 @@ export async function getCompleted(
 ) {
 	try {
 		const page = getPageFromQuery(req.query);
-		const qs = `?status=Completed${page && page !== "1" ? `&page=${page}` : ""}`;
+		const qs = `?status=Completed&order=update${page && page !== "1" ? `&page=${page}` : ""}`;
 		const doc = await scraper.scrapeDOM(`/anime/${qs}`);
 		const data = parser.parseAnimeByStatus(doc);
 		const pagination = parser.parsePagination(doc);
