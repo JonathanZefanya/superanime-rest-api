@@ -23,9 +23,11 @@ export function paginateAnimeList<T>(
 ): AnimeListPage<T> {
 	const initial = typeof initialQuery === "string" ? initialQuery.trim().toUpperCase() : "";
 	const requestedPage = Math.max(1, Number.parseInt(String(pageQuery ?? "1"), 10) || 1);
-	const matchingGroups = initial === "#"
-		? groups.filter((entry) => !/^[A-Z]$/.test(entry.initial.trim().toUpperCase()))
-		: groups.filter((entry) => entry.initial.trim().toUpperCase() === initial);
+	const matchingGroups = !initial
+		? groups
+		: initial === "#"
+			? groups.filter((entry) => !/^[A-Z]$/.test(entry.initial.trim().toUpperCase()))
+			: groups.filter((entry) => entry.initial.trim().toUpperCase() === initial);
 	const items = matchingGroups.flatMap((entry) => entry.animeList);
 	const totalPages = Math.max(1, Math.ceil(items.length / size));
 	const currentPage = Math.min(requestedPage, totalPages);
@@ -33,7 +35,7 @@ export function paginateAnimeList<T>(
 
 	return {
 		data: matchingGroups.length
-			? [{ initial: initial || matchingGroups[0]?.initial || "#", animeList: items.slice(start, start + size) }]
+			? [{ initial: initial || "ALL", animeList: items.slice(start, start + size) }]
 			: [],
 		pagination: {
 			currentPage,
