@@ -19,6 +19,23 @@ describe("paginateAnimeList", () => {
 	test("'#' mengumpulkan judul yang tidak diawali huruf", () => {
 		expect(paginateAnimeList(groups, "#", "1").data[0]?.animeList).toEqual(["1st"]);
 	});
+
+	test("tanpa initial mengembalikan semua grup", () => {
+		const page = paginateAnimeList(groups, undefined, "1");
+		expect(page.data[0]?.initial).toBe("ALL");
+		expect(page.data[0]?.animeList).toHaveLength(50);
+		expect(page.pagination).toMatchObject({
+			currentPage: 1,
+			totalPages: 3,
+			hasNextPage: true,
+		});
+	});
+
+	test("tanpa initial, halaman terakhir berisi sisa item", () => {
+		const page = paginateAnimeList(groups, undefined, "3");
+		expect(page.data[0]?.animeList).toHaveLength(21); // 120 + 1 item, 50/halaman
+		expect(page.pagination).toMatchObject({ currentPage: 3, totalPages: 3, hasNextPage: false });
+	});
 });
 
 describe("requireSyncSecret", () => {
