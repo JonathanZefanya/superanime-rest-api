@@ -234,6 +234,7 @@ export async function getEpisodeDetails(req: Request, res: Response, next: NextF
 		const seen = new Set<string>();
 		const streams = responses
 			.flatMap((response) => response.streams ?? [])
+			.map((stream) => ({ ...stream, link: parser.decodeStreamLink(stream.link) }))
 			.filter((stream) => !seen.has(stream.link) && Boolean(seen.add(stream.link)))
 			.sort((a, b) => resoValue(a.reso) - resoValue(b.reso));
 

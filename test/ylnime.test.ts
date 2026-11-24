@@ -21,6 +21,30 @@ describe("ylnime tokens", () => {
 	});
 });
 
+describe("ylnime stream links", () => {
+	test("link tersamar (~ + base64 URL terbalik) didekode", () => {
+		expect(parser.decodeStreamLink("~NHBtLjIwMTQyNzQzNTA5NzEtNDc0ZC9vci9kaS5lc3JldmVtaW5hLjNzLy86c3B0dGg=")).toBe(
+			"https://s3.animeverse.id/ro/d474-1790534724102.mp4",
+		);
+	});
+
+	test("link biasa dibiarkan, link rusak dikosongkan", () => {
+		expect(parser.decodeStreamLink("https://example.com/a.mp4")).toBe("https://example.com/a.mp4");
+		expect(parser.decodeStreamLink("~bm90LWEtdXJs")).toBe("");
+	});
+
+	test("toServers hanya menyimpan URL yang bisa diputar", () => {
+		const servers = parser.toServers([
+			{ reso: "720p", link: parser.decodeStreamLink("~NHBtLjIwMTQyNzQzNTA5NzEtNDc0ZC9vci9kaS5lc3JldmVtaW5hLjNzLy86c3B0dGg=") },
+			{ reso: "720p", link: parser.decodeStreamLink("~ZGFvbG53b2Q/Q25USml0QzIvZWxpZi9pcGEvbW9jLm5pYXJkbGV4aXAvLzpzcHR0aA==") },
+			{ reso: "720p", link: "~still-encoded" },
+		]);
+		expect(servers).toEqual([
+			{ title: "Animeverse 720p", serverId: "https://s3.animeverse.id/ro/d474-1790534724102.mp4" },
+		]);
+	});
+});
+
 describe("ylnime parser", () => {
 	test("hasil pencarian: 20 kartu unik dengan judul dan poster", () => {
 		const cards = parser.parseCards(fixture("ylnime-search.html"));

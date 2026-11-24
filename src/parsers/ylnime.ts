@@ -209,11 +209,29 @@ function hostLabel(link: string): string {
 }
 
 /**
+ * YLnime menyamarkan `link` di JSON episode: "~" + base64 dari URL yang
+ * dibalik (mis. `~NHBtLi4u` → "4pm...//:sptth" → "https://...mp4").
+ * Tanpa didekode, pemutar memuat "~..." sebagai path relatif di frontend.
+ * Link biasa (format lama) dikembalikan apa adanya.
+ */
+export function decodeStreamLink(link: string): string {
+	const value = link?.trim() ?? "";
+	if (!value.startsWith("~")) return value;
+	try {
+		const decoded = [...Buffer.from(value.slice(1), "base64").toString("utf8")].reverse().join("");
+		return /^https?:\/\//i.test(decoded) ? decoded : "";
+	} catch {
+		return "";
+	}
+}
+
+/**
  * Pixeldrain menolak pemutaran lintas situs (`hotlink_detected`) untuk akun
  * gratis — dipicu header `Sec-Fetch-Site: cross-site` yang tidak bisa diubah
  * browser — dan halaman `/u/`-nya memasang `frame-ancestors 'self'`.
  */
-const isPlayable = (link: string): boolean => Boolean(link) && !link.includes("pixeldrain.com");
+const isPlayable = (link: string): boolean =>
+	/^https?:\/\//i.test(link) && !link.includes("pixeldrain.com");
 
 export function toServers(streams: YLnime.Stream[]): Server[] {
 	const counts = new Map<string, number>();
